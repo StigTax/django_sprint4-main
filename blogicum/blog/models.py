@@ -147,7 +147,7 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-        ordering = ['created_at']
+        ordering = ('created_at',)
 
     def __str__(self):
         return f'Комментарий от {self.author} к посту {self.post.title}'

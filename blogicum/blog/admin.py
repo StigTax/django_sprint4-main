@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Category, Location, Post
+from .models import Category, Location, Post, Comment
 
 
 class PostInLine(admin.StackedInline):
@@ -32,19 +32,30 @@ class PostAdmin(admin.ModelAdmin):
         'created_at',
         'author',
         'location',
-        'category',
+        'category'
     )
     list_editable = (
         'is_published',
         'category'
     )
-    list_editable = ('is_published', 'category')
     search_fields = ('title', 'text')
     list_filter = ('category', 'pub_date', 'author')
     list_display_links = ('title',)
     date_hierarchy = 'pub_date'
 
 
+class CommentAdmin(admin.ModelAdmin):
+    list_display = (
+        'author',
+        'text',
+        'post',
+        'created_at',
+    )
+    search_fields = ('post', 'text')
+    list_filter = ('created_at', 'author')
+
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Post, PostAdmin)
+admin.site.register(Comment, CommentAdmin)

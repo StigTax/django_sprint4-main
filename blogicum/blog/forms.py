@@ -15,7 +15,7 @@ class EditUserForm(UserChangeForm):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'username', 'email']
+        fields = ('first_name', 'last_name', 'username', 'email')
 
 
 class PostForm(forms.ModelForm):
@@ -23,11 +23,11 @@ class PostForm(forms.ModelForm):
 
     class Meta:
         model = Post
-        fields = [
-            'title', 'text',
-            'pub_date', 'category', 'location',
-            'is_published', 'image'
-        ]
+        exclude = (
+            'author',
+            'created_at',
+            'updated_at'
+        )
         widgets = {
             'pub_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }
@@ -51,15 +51,3 @@ class CommentForm(forms.ModelForm):
         widgets = {
             'text': forms.Textarea(attrs={'rows': 3}),
         }
-
-    def __init__(self, *args, **kwargs):
-        self.post = kwargs.pop('post', None)
-        super().__init__(*args, **kwargs)
-
-    def save(self, commit=True):
-        comment = super().save(commit=False)
-        if self.post:
-            comment.post = self.post
-        if commit:
-            comment.save()
-        return comment
