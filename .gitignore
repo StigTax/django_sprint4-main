@@ -150,11 +150,10 @@ media/
 
 sent_emails/
 
-pages/admin.py
-pages/tests.py
-pages/model.py
-pages/views.py
-django_sprint4.zip
-core/admin.py
-core/tests.py
-blog/tests.py
+blogicum/pages/admin.py
+blogicum/pages/tests.py
+blogicum/pages/model.py
+blogicum/pages/views.py
+blogicum/core/admin.py
+blogicum/core/tests.py
+blogicum/blog/tests.py
