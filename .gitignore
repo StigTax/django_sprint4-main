@@ -150,10 +150,8 @@ media/
 
 sent_emails/
 
+blogicum/blog/tests.py
 blogicum/pages/admin.py
 blogicum/pages/tests.py
 blogicum/pages/model.py
 blogicum/pages/views.py
-blogicum/core/admin.py
-blogicum/core/tests.py
-blogicum/blog/tests.py
