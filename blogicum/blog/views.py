@@ -120,8 +120,8 @@ class PostDetailView(DetailView):
             pk=self.kwargs['post_id']
         )
         if (post.author != self.request.user
-            and (not post.is_published or
-                 not post.category.is_published
+            and (not post.is_published
+                 or not post.category.is_published
                  or post.pub_date > now())):
             raise Http404("Этот пост недоступен.")
         return post
