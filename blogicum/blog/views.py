@@ -123,7 +123,7 @@ class PostDetailView(DetailView):
             and (not post.is_published
                  or not post.category.is_published
                  or post.pub_date > now())):
-            raise Http404("Этот пост недоступен.")
+            raise Http404('Этот пост недоступен.')
         return post
 
     def get_context_data(self, **kwargs):
