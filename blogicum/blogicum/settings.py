@@ -6,11 +6,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-au@6_oo@*kdg_#n75(a8egr-u5y_9fz*ro$(=qp7g^-9^ha-63'
 
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
+    'stigtax.pythonanywhere.com',
+    'www.stigtax.pythonanywhere.com',
 ]
 
 
