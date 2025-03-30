@@ -92,14 +92,41 @@ def get_post_queryset(apply_filters=False, annotate_comments=False):
     return queryset
 
 
+class CommentMixin:
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            Comment.objects.filter(
+                post_id=self.kwargs['post_id']
+            ),
+            pk=self.kwargs['comment_id']
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        comment = self.get_object()
+        if comment.author != request.user:
+            return HttpResponseRedirect(
+                reverse_lazy(
+                    'blog:post_detail',
+                    kwargs={'post_id': self.kwargs['post_id']}
+                )
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            'blog:post_detail',
+            kwargs={'post_id': self.kwargs['post_id']}
+        )
+
+
 class PostListView(ListView):
     template_name = 'blog/index.html'
-    context_object_name = 'page_obj'
+    context_object_name = 'post_obj'
     paginate_by = POSTS_PER_PAGE
     queryset = get_post_queryset(
         apply_filters=True,
         annotate_comments=True
-    ).order_by('-pub_date')
+    )
 
 
 class PostDetailView(DetailView):
@@ -141,7 +168,7 @@ class PostDetailView(DetailView):
 class CategoryPostListView(ListView):
     model = Post
     template_name = 'blog/category.html'
-    context_object_name = 'page_obj'
+    context_object_name = 'post_obj'
     paginate_by = POSTS_PER_PAGE
 
     def get_category(self):
@@ -170,8 +197,8 @@ class CategoryPostListView(ListView):
 class ProfileView(ListView):
     model = Post
     template_name = 'blog/profile.html'
-    context_object_name = 'posts'
-    paginate_by = 10
+    context_object_name = 'post_obj'
+    paginate_by = POSTS_PER_PAGE
 
     def get_profile_user(self):
         return get_object_or_404(
@@ -181,16 +208,11 @@ class ProfileView(ListView):
 
     def get_queryset(self):
         profile_user = self.get_profile_user()
-        if self.request.user == profile_user:
-            queryset = get_post_queryset(
-                apply_filters=False,
-                annotate_comments=True
-            )
-        else:
-            queryset = get_post_queryset(
-                apply_filters=True,
-                annotate_comments=True
-            )
+        need_filter = self.request.user != profile_user
+        queryset = get_post_queryset(
+            apply_filters=need_filter,
+            annotate_comments=True
+        )
         return queryset.filter(author=profile_user)
 
     def get_context_data(self, **kwargs):
@@ -237,12 +259,12 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
     pk_url_kwarg = 'post_id'
 
     def dispatch(self, request, *args, **kwargs):
-        post = get_object_or_404(Post, id=self.kwargs['post_id'])
+        post = self.get_object()
         if post.author != request.user:
             return HttpResponseRedirect(
                 reverse_lazy(
                     'blog:post_detail',
-                    kwargs={'post_id': self.kwargs['post_id']}
+                    kwargs={'post_id': post.id}
                 )
             )
         return super().dispatch(request, *args, **kwargs)
@@ -250,7 +272,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy(
             'blog:post_detail',
-            kwargs={'post_id': self.kwargs['post_id']}
+            kwargs={'post_id': self.object.id}
         )
 
 
@@ -260,12 +282,12 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
     pk_url_kwarg = 'post_id'
 
     def dispatch(self, request, *args, **kwargs):
-        post = get_object_or_404(Post, id=self.kwargs['post_id'])
+        post = self.get_object()
         if post.author != request.user:
             return HttpResponseRedirect(
                 reverse_lazy(
                     'blog:post_detail',
-                    kwargs={'post_id': self.kwargs['post_id']}
+                    kwargs={'post_id': post.id}
                 )
             )
         return super().dispatch(request, *args, **kwargs)
@@ -298,67 +320,12 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         )
 
 
-class CommentUpdateView(LoginRequiredMixin, UpdateView):
+class CommentUpdateView(LoginRequiredMixin, CommentMixin, UpdateView):
     model = Comment
     form_class = CommentForm
     template_name = 'blog/comment.html'
 
-    def get_object(self, queryset=None):
-        return get_object_or_404(
-            Comment.objects.filter(
-                post_id=self.kwargs['post_id']
-            ),
-            pk=self.kwargs['comment_id']
-        )
 
-    def form_valid(self, form):
-        form.instance.post = get_object_or_404(Post, id=self.kwargs['post_id'])
-        form.instance.author = self.request.user
-        return super().form_valid(form)
-
-    def dispatch(self, request, *args, **kwargs):
-        comment = self.get_object()
-        if comment.author != request.user:
-            return HttpResponseRedirect(
-                reverse_lazy(
-                    'blog:post_detail',
-                    kwargs={'post_id': self.kwargs['post_id']}
-                )
-            )
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        return reverse_lazy(
-            'blog:post_detail',
-            kwargs={'post_id': self.kwargs['post_id']}
-        )
-
-
-class CommentDeleteView(LoginRequiredMixin, DeleteView):
+class CommentDeleteView(LoginRequiredMixin, CommentMixin, DeleteView):
     model = Comment
     template_name = 'blog/comment.html'
-
-    def get_object(self, queryset=None):
-        return get_object_or_404(
-            Comment.objects.filter(
-                post_id=self.kwargs['post_id']
-            ),
-            pk=self.kwargs['comment_id']
-        )
-
-    def dispatch(self, request, *args, **kwargs):
-        comment = self.get_object()
-        if comment.author != request.user:
-            return HttpResponseRedirect(
-                reverse_lazy(
-                    'blog:post_detail',
-                    kwargs={'post_id': self.kwargs['post_id']}
-                )
-            )
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        return reverse_lazy(
-            'blog:post_detail',
-            kwargs={'post_id': self.kwargs['post_id']}
-        )
